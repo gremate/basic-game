@@ -1,0 +1,8 @@
+{
+    "env": {
+        "node": true,
+        "es2023": true
+    },
+    "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended", "prettier"],
+    "rules": {}
+}

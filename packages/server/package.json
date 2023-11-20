@@ -1,0 +1,10 @@
+{
+    "name": "@game/server",
+    "version": "1.0.0",
+    "description": "WebSocket server for the game",
+    "private": true,
+    "scripts": {},
+    "dependencies": {
+        "ws": "^8.14.2"
+    }
+}
