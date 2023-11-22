@@ -10,7 +10,7 @@
         "ui:start": "npm run start --workspace=@game/ui",
         "ui:build": "npm run build --workspace=@game/ui",
         "ui:test": "npm run test --workspace=@game/ui",
-        "ui:deploy": "npm install && npm run ui:build && npm run nginx:copy-config && cp -r ./packages/ui/build/. /usr/share/nginx/html/basic-game-ui/ && systemctl reload nginx",
+        "ui:deploy": "npm install && npm run ui:build && npm run nginx:copy-config && rm -r /usr/share/nginx/html/basic-game-ui/* && cp -r ./packages/ui/build/. /usr/share/nginx/html/basic-game-ui/ && systemctl reload nginx",
         "nginx:copy-config": "cp basic-game-nginx.conf /etc/nginx/conf.d/ && nginx -t",
         "prettier": "prettier . --write",
         "prettier:check": "prettier . --check"
