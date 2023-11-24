@@ -3,7 +3,9 @@
     "version": "1.0.0",
     "description": "WebSocket server for the game",
     "private": true,
-    "scripts": {},
+    "scripts": {
+        "start": "ts-node ./src/index.ts"
+    },
     "dependencies": {
         "ws": "^8.14.2"
     }
