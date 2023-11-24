@@ -25,5 +25,5 @@
         "composite": true,
         "skipLibCheck": true
     },
-    "references": [{ "path": "./packages/ui" }, { "path": "./packages/server" }]
+    "references": [{ "path": "./packages/core" }, { "path": "./packages/ui" }, { "path": "./packages/server" }]
 }
