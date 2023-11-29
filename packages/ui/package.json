@@ -21,7 +21,8 @@
         "@types/jest": "^29.5.8",
         "@types/node": "^20.9.1",
         "@types/react": "^18.2.37",
-        "@types/react-dom": "^18.2.15"
+        "@types/react-dom": "^18.2.15",
+        "sass": "^1.69.5"
     },
     "browserslist": {
         "production": [

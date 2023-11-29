@@ -1,0 +1,6 @@
+$default-color: #282828;
+$error-color: #ff4e4e;
+
+@mixin box-shadow($color) {
+    box-shadow: 0 0 0.1875rem 0.0625rem inset $color;
+}
