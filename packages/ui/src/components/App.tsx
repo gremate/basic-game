@@ -1,36 +1,54 @@
 import '../styles/app.scss';
 import { useRef, useState } from 'react';
-import Connect from './Connect';
-import Loader from './Loader';
+import type { UUID } from 'node:crypto';
+import type { GameState, ServerMessage } from '@game/core';
+import Connect from './Connect.tsx';
+import Loader from './Loader.tsx';
+import Game from './Game.tsx';
 
-export default function App() {
-    const [connected, setConnected] = useState(false);
+export default function App(): JSX.Element {
     const [loading, setLoading] = useState(false);
-    const wsRef = useRef<WebSocket | null>(null);
+    const [playerId, setPlayerId] = useState<UUID | null>(null);
+    const [gameState, setGameState] = useState<GameState | null>(null);
+    const webSocketRef = useRef<WebSocket | null>(null);
+    const connected = playerId !== null && gameState !== null;
 
     function connectToServer(username: string) {
         setLoading(true);
 
-        wsRef.current = new WebSocket(
+        webSocketRef.current = new WebSocket(
             `ws://${window.location.hostname}${
                 process.env.NODE_ENV === 'production' ? '/game-server' : ':3010/'
             }?username=${username.trim()}`
         );
 
-        wsRef.current.addEventListener('open', () => {
-            setConnected(true);
-            setLoading(false);
-        });
+        webSocketRef.current.addEventListener('message', event => {
+            const message: ServerMessage = JSON.parse(event.data);
 
-        wsRef.current.addEventListener('message', event => {
-            console.log(event); //TODO: remove it
+            switch (message.type) {
+                case 'updatePlayerId':
+                    setPlayerId(message.data.id);
+                    break;
+                case 'updateGameState':
+                    setGameState(message.data.gameState);
+                    break;
+            }
         });
     }
 
     return (
         <main>
             {loading && <Loader />}
-            {connected ? null : <Connect connectToServer={connectToServer} />}
+            {connected ? (
+                <Game
+                    playerId={playerId}
+                    gameState={gameState}
+                    webSocket={webSocketRef.current!}
+                    setLoading={setLoading}
+                />
+            ) : (
+                <Connect connectToServer={connectToServer} />
+            )}
         </main>
     );
 }

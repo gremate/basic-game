@@ -17,5 +17,7 @@
             "jsx": true
         }
     },
-    "rules": {}
+    "rules": {
+        "@typescript-eslint/no-non-null-assertion": "off"
+    }
 }

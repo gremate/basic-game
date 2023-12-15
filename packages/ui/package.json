@@ -3,6 +3,7 @@
     "version": "1.0.0",
     "description": "React app for the game UI",
     "private": true,
+    "type": "module",
     "scripts": {
         "start": "react-scripts start",
         "build": "react-scripts build",

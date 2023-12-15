@@ -4,7 +4,7 @@ interface ConnectProps {
     connectToServer: (username: string) => void;
 }
 
-export default function Connect({ connectToServer }: ConnectProps) {
+export default function Connect({ connectToServer }: ConnectProps): JSX.Element {
     const [username, setUsername] = useState('');
     const [error, setError] = useState('');
     const hasError = Boolean(error);

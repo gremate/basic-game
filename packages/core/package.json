@@ -3,6 +3,11 @@
     "version": "1.0.0",
     "description": "Shared types/functions/etc. for other packages",
     "private": true,
-    "main": "src/index.ts",
-    "scripts": {}
+    "type": "module",
+    "main": "build/src/index.js",
+    "types": "types/src/index.d.ts",
+    "scripts": {
+        "prebuild": "rimraf build types",
+        "build": "tsc --build"
+    }
 }

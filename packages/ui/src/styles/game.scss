@@ -1,0 +1,6 @@
+@use 'common' as *;
+
+.game-canvas {
+    border: 0.375rem solid $default-color;
+    border-radius: 0.75rem;
+}

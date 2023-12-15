@@ -1,21 +1,11 @@
-import { WebSocketServer } from 'ws';
+import GameService from './services/GameService.js';
 
-const port = 3010;
-const wss = new WebSocketServer({ port }, () =>
-    console.log(`Game server started on PORT: ${port} with PID: ${process.pid}`)
-);
-
-wss.on('connection', ws => {
-    ws.send('message from server'); //TODO: remove it
-});
-
-wss.on('error', console.error);
+const gameService = new GameService();
 
 function onSignal(signal: NodeJS.Signals) {
     console.log(`${signal} signal received. Game server is shutting down.`);
 
-    wss.close();
-    wss.clients.forEach(x => x.close());
+    gameService.shutdown();
 }
 
 process.on('SIGINT', onSignal);
