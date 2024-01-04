@@ -1,11 +1,9 @@
 import type { UUID } from 'node:crypto';
+import type { Circle } from './index.js';
 
-export interface Player {
+export interface Player extends Circle {
     id: UUID;
     name: string;
-    x: number;
-    y: number;
-    radius: number;
     lineWidth: number;
     color: string;
 }

@@ -2,25 +2,35 @@ import type { IncomingMessage } from 'http';
 import { randomUUID, type UUID } from 'node:crypto';
 import WebSocket, { WebSocketServer } from 'ws';
 import type {
+    Circle,
     ClientMessage,
+    Coin,
     GameState,
     Player,
     ServerMessage,
     UpdatePlayerPositionClientMessageData
 } from '@game/core';
-import { Utilities, playerLineWidth, playerRadius } from '@game/core';
+import { coinRadius, CoinType, playerLineWidth, playerRadius, Utilities } from '@game/core';
 
 export default class GameService {
     private readonly port = 3010;
     private readonly playerSpeed = 100 / 1000; // 100px / 1s
+    private readonly maxCoinCount = 10;
+    private readonly coinValuesMap = {
+        [CoinType.Gold]: 6,
+        [CoinType.Silver]: 3,
+        [CoinType.Bronze]: 1
+    } as const;
     private readonly webSocketServer: WebSocketServer;
     private readonly gameState: GameState;
+
+    private coinSpawningTimeoutId: NodeJS.Timeout | null = null;
 
     constructor() {
         this.webSocketServer = new WebSocketServer({ port: this.port }, () =>
             console.log(`Game server started on PORT: ${this.port} with PID: ${process.pid}`)
         );
-        this.gameState = { players: [], map: { height: 600, width: 800 } };
+        this.gameState = { players: [], map: { height: 600, width: 800 }, coins: [] };
 
         this.addWebSocketServerEventListeners();
     }
@@ -28,14 +38,23 @@ export default class GameService {
     public shutdown() {
         this.webSocketServer.close();
         this.webSocketServer.clients.forEach(x => x.close());
+        this.stopCoinSpawning();
     }
 
     private addWebSocketServerEventListeners() {
         this.webSocketServer.on('connection', (webSocket, request) => {
             const playerId = this.addPlayer(webSocket, request);
 
+            if (this.coinSpawningTimeoutId === null && this.gameState.players.length > 1) {
+                this.startCoinSpawning();
+            }
+
             webSocket.on('close', () => {
                 this.removePlayer(playerId);
+
+                if (this.gameState.players.length <= 1) {
+                    this.stopCoinSpawning();
+                }
             });
 
             webSocket.on('message', data => {
@@ -105,7 +124,68 @@ export default class GameService {
                 player.x = newX;
             }
 
+            this.absorbCoins(player);
             this.sendGameState();
+        }
+    }
+
+    private absorbCoins(player: Player) {
+        const absorbableCoins = this.gameState.coins.filter(coin => this.isAbsorbable(player, coin));
+
+        absorbableCoins.forEach(coin => {
+            const index = this.gameState.coins.indexOf(coin);
+
+            player.radius = player.radius + this.coinValuesMap[coin.type];
+            this.gameState.coins.splice(index, 1);
+        });
+    }
+
+    private isAbsorbable(circle: Circle, circleToAbsorb: Circle) {
+        const distanceBetweenCenters = Math.sqrt(
+            (circle.x - circleToAbsorb.x) ** 2 + (circle.y - circleToAbsorb.y) ** 2
+        );
+
+        return distanceBetweenCenters + circleToAbsorb.radius <= circle.radius;
+    }
+
+    private startCoinSpawning() {
+        const loop = () => {
+            this.coinSpawningTimeoutId = setTimeout(
+                () => {
+                    this.spawnCoin();
+                    loop();
+                },
+                Utilities.randomInteger(5, 10) * 1000
+            );
+        };
+
+        this.coinSpawningTimeoutId = setTimeout(() => {
+            this.spawnCoin();
+            loop();
+        }, 5000);
+    }
+
+    private spawnCoin() {
+        if (this.gameState.coins.length < this.maxCoinCount) {
+            const random = Math.random();
+
+            const coin: Coin = {
+                x: Utilities.randomInteger(50, this.gameState.map.width - 50),
+                y: Utilities.randomInteger(50, this.gameState.map.height - 50),
+                radius: coinRadius,
+                type: random <= 0.1 ? CoinType.Gold : random <= 0.35 ? CoinType.Silver : CoinType.Bronze
+            };
+
+            this.gameState.coins.push(coin);
+            this.sendGameState();
+        }
+    }
+
+    private stopCoinSpawning() {
+        if (this.coinSpawningTimeoutId) {
+            clearTimeout(this.coinSpawningTimeoutId);
+
+            this.coinSpawningTimeoutId = null;
         }
     }
 

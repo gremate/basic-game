@@ -1,9 +1,15 @@
 import '../styles/game.scss';
 import { useEffect, useRef } from 'react';
 import type { UUID } from 'node:crypto';
-import type { ClientMessage, Controls, GameState } from '@game/core';
-import { defaultColor } from '@game/core';
+import type { ClientMessage, Controls, GameState, Player } from '@game/core';
+import { bronzeColor, CoinType, defaultColor, goldColor, silverColor } from '@game/core';
 import useRunLoop from '../hooks/useRunLoop.ts';
+
+const coinColorsMap = {
+    [CoinType.Gold]: goldColor,
+    [CoinType.Silver]: silverColor,
+    [CoinType.Bronze]: bronzeColor
+} as const;
 
 interface GameProps {
     playerId: UUID;
@@ -22,23 +28,55 @@ export default function Game({ playerId, gameState, webSocket, setLoading }: Gam
     });
     const { timestamp, prevTimestamp } = useRunLoop();
 
-    function drawPlayers(context: CanvasRenderingContext2D) {
-        gameState.players.forEach(player => {
+    function drawCoins(context: CanvasRenderingContext2D) {
+        gameState.coins.forEach(coin => {
             context.beginPath();
 
-            context.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
-            context.lineWidth = player.lineWidth;
-            context.strokeStyle = player.color;
-            context.stroke();
+            context.arc(coin.x, coin.y, coin.radius, 0, Math.PI * 2);
+            context.fillStyle = coinColorsMap[coin.type];
+            context.fill();
 
             context.closePath();
-
-            context.font = '1.125rem sans-serif';
-            context.textAlign = 'center';
-            context.textBaseline = 'middle';
-            context.fillStyle = defaultColor;
-            context.fillText(player.name, player.x, player.y - player.radius - 10);
         });
+    }
+
+    function drawPlayer(context: CanvasRenderingContext2D, player: Player) {
+        context.beginPath();
+
+        context.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+        context.fillStyle = 'white';
+        context.fill();
+
+        context.closePath();
+
+        context.beginPath();
+
+        context.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+        context.lineWidth = player.lineWidth;
+        context.strokeStyle = player.color;
+        context.stroke();
+
+        context.closePath();
+
+        context.font = '1.125rem sans-serif';
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+        context.fillStyle = defaultColor;
+        context.fillText(player.name, player.x, player.y - player.radius - 10);
+    }
+
+    function drawPlayers(context: CanvasRenderingContext2D) {
+        gameState.players
+            .filter(player => player.id !== playerId)
+            .forEach(player => {
+                drawPlayer(context, player);
+            });
+
+        const currentPlayer = gameState.players.find(player => player.id === playerId);
+
+        if (currentPlayer) {
+            drawPlayer(context, currentPlayer);
+        }
     }
 
     function draw() {
@@ -47,6 +85,7 @@ export default function Game({ playerId, gameState, webSocket, setLoading }: Gam
         if (context) {
             context.clearRect(0, 0, context.canvas.width, context.canvas.height);
 
+            drawCoins(context);
             drawPlayers(context);
         }
     }
